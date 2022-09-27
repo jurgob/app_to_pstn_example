@@ -41,6 +41,15 @@ curl -X POST 'localhost:5001/api/login' \
 }'
 ```
 
+get a token for `user1` (same as above, but the token is gonan be already copied in your clipboard, you will have just to paste it)
+
+```bash
+ curl -s -X POST 'localhost:5001/api/login' \
+--header 'Content-Type: application/json' \
+-d '{
+    "username": "user1"
+}' | jq -r ".token" | pbcopy
+```
 
 
 
