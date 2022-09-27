@@ -80,10 +80,11 @@ const voiceAnswer = async (req, res, next) => {
  *
  */
 const route = (app, express) => {
-  app.use(express.static(path.join(__dirname, "build")));
-  app.get("/", function (req, res) {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
-  });
+  // app.use(express.static(path.join(__dirname, "build")));
+  // app.get("/", function (req, res) {
+  //   res.sendFile(path.join(__dirname, "build", "index.html"));
+  // });
+  app.use(express.json());
 
   app.post("/api/login", async (req, res) => {
     const {
@@ -95,6 +96,13 @@ const route = (app, express) => {
     } = req.nexmo;
 
     const { username } = req.body;
+    logger.info({body: req.body},"login body")
+    if(!username){
+      res.status(400)
+      return res.json({
+        err: "username can't be empty"
+      })
+    }
     res.json({
       user: username,
       token: generateUserToken(username),
@@ -114,6 +122,12 @@ const route = (app, express) => {
 
     try {
       const { username } = req.body;
+      if(!username){
+        res.status(400)
+        return res.json({
+          err: "username can't be empty"
+        })
+      }
       const resNewUser = await csClient({
         url: `${CS_URL}/v0.3/users`,
         method: "post",
@@ -133,6 +147,20 @@ const route = (app, express) => {
     }
   });
 
+  app.get("/api/users", async (req, res) => {
+    const { logger, csClient, storageClient } = req.nexmo;
+
+
+      const userListResponse = await csClient({
+        url: `${CS_URL}/v0.3/users`,
+        method: "get",
+      });
+
+      const users = userListResponse.data._embedded.users;
+
+    res.json({ users });
+  });
+
   app.get("/api/users/:username", async (req, res) => {
     const { logger, csClient, storageClient } = req.nexmo;
 
@@ -144,10 +172,16 @@ const route = (app, express) => {
       user = JSON.parse(user)
     }
     if (!user) {
-      const userResponse = await csClient({
-        url: `${CS_URL}/v0.3/users?name=${username}`,
-        method: "get",
-      });
+      let userResponse;
+      try{
+        userResponse = await csClient({
+          url: `${CS_URL}/v0.3/users?name=${username}`,
+          method: "get",
+        });
+      }catch(e){
+        res.status(404)
+        res.json({ err: "user not found" });
+      }
       user = userResponse.data._embedded.users[0];
       await storageClient.set(`user:${username}`, JSON.stringify(user));
     }
