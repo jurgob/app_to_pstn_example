@@ -3,7 +3,21 @@
 Here's an example of a back end connecting an app to PSTN via the Vonage Voice SDK 
 
 
-## endpoint
+## install it
+
+clone the repo
+
+```bash
+cd app_to_pstn_example
+nvm use
+npm i
+```
+
+## run it
+
+```bash
+npm start
+```
 
 ## request examples:
 
